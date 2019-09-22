@@ -40,11 +40,6 @@ class MetadataCleaner
     end
   end
 
-  def clean_up_downloads
-    flatten_directory
-    destroy_non_video_files
-  end
-
   def welcome_message
     puts "Welcome to Movie Metadata Cleaning Utility."
     puts "=> Press any key to continue..."
@@ -131,7 +126,9 @@ class MetadataCleaner
     puts "=> Files copied to #{destination} and original files destroyed."
   end
 
-  def destroy_sample_files(file)
+  def is_sample_file(file)
+    regex = /(sample)/i
+    file.match?(regex)
   end
 
   def destroy_dirty_file!(file)
@@ -141,7 +138,8 @@ class MetadataCleaner
   def destroy_non_video_files!(files)
     files = get_files("*")
     files.each do |file|
-      unless is_video_file?(file)
+      destroy_sample_files(file)
+      unless is_video_file?(file) || is_sample_file(file)
         destroy_dirty_file!(file)
       end
     end
