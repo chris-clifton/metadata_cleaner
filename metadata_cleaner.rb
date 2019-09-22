@@ -100,7 +100,8 @@ class MetadataCleaner
     end
 
     if video_files.count > 0  
-      puts "=> #{video_files.count} video files remaining."
+      puts "=> #{video_files.count} video files remaining:"
+      puts "#{video_files}"
       puts "=> Move files to #{@directory} as is? Enter 'yes' or 'no'."
       move = gets.chomp
       if move == "yes"
