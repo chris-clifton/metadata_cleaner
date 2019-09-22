@@ -10,6 +10,7 @@ class MetadataCleaner
 
   def start
     flatten_directory
+    destroy_non_video_files
     set_destination_directory
     clean_mkv_files
     clean_mp4_files
@@ -39,6 +40,11 @@ class MetadataCleaner
     end
   end
 
+  def clean_up_downloads
+    flatten_directory
+    destroy_non_video_files
+  end
+
   def welcome_message
     puts "Welcome to Movie Metadata Cleaning Utility."
     puts "=> Press any key to continue..."
@@ -49,10 +55,10 @@ class MetadataCleaner
   def clean_mkv_files
     mkv_files = get_files("*.mkv")
 
-    # mkv_files.each do |mkv|
-    #   convert_mkv_to_mp4(mkv)
-    #   destroy_dirty_file!(mkv)
-    # end
+    mkv_files.each do |mkv|
+      convert_mkv_to_mp4(mkv)
+      destroy_dirty_file!(mkv)
+    end
   end
 
   # Strips metadata, removes old file for every mp4 file
@@ -125,8 +131,20 @@ class MetadataCleaner
     puts "=> Files copied to #{destination} and original files destroyed."
   end
 
+  def destroy_sample_files(file)
+  end
+
   def destroy_dirty_file!(file)
     FileUtils.rm(file)
+  end
+
+  def destroy_non_video_files!(files)
+    files = get_files("*")
+    files.each do |file|
+      unless is_video_file?(file)
+        destroy_dirty_file!(file)
+      end
+    end
   end
 end
 
