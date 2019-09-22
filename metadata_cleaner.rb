@@ -1,5 +1,4 @@
 #!/usr/bin/env ruby
-
 require 'pry'
 
 class MetadataCleaner
@@ -10,17 +9,17 @@ class MetadataCleaner
 
   def start
     flatten_directory
-    destroy_non_video_files
-    set_destination_directory
-    clean_mkv_files
-    clean_mp4_files
-    find_and_move_remaining_video_files
+    # set_destination_directory
+    # destroy_non_video_files!
+    # clean_mkv_files
+    # clean_mp4_files
+    # find_and_move_remaining_video_files
   end
 
    # Flatten directory so everything is out of folder structure
    def flatten_directory
-    current_dir = "/Downloads"
-    system("mv #{current_dir}/*/**/*(.D) #{current_dir}")
+    system("find /home/chris/Downloads -mindepth 2 -type f -exec mv -i '{}' /home/chris/Downloads ';'")
+    #system("mv #{current_dir}/*/**/*(.D) #{current_dir}")
   end
 
   def set_destination_directory
@@ -131,16 +130,25 @@ class MetadataCleaner
     file.match?(regex)
   end
 
+  def destroy_empty_directory(directory)
+    if Dir.empty?(directory)
+      FileUtils.remove_dir(directory)
+    end
+  end  
+
   def destroy_dirty_file!(file)
     FileUtils.rm(file)
   end
 
-  def destroy_non_video_files!(files)
+  def destroy_non_video_files!
     files = get_files("*")
     files.each do |file|
-      destroy_sample_files(file)
-      unless is_video_file?(file) || is_sample_file(file)
+      if is_sample_file(file)
         destroy_dirty_file!(file)
+      elsif is_video_file?(file)
+        next  
+      elsif File.directory?(file)
+        destroy_empty_directory(file)
       end
     end
   end
