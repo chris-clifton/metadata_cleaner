@@ -1,6 +1,4 @@
 #!/usr/bin/env ruby
-require 'pry'
-
 class MetadataCleaner
 
   def initialize
@@ -10,13 +8,9 @@ class MetadataCleaner
   def start
     flatten_directory
     set_destination_directory
-    puts "\n\n\n *** destroying nonvideo files *** \n\n\n"
     destroy_non_video_files!
-    puts "\n\n\n *** clean mkv files *** \n\n\n"
     clean_mkv_files
-    puts "\n\n\n *** clean mp4 files *** \n\n\n"
     clean_mp4_files
-    puts "\n\n\n *** find and remove remaining video files *** \n\n\n"
     find_and_move_remaining_video_files
   end
 
