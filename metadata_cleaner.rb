@@ -9,17 +9,20 @@ class MetadataCleaner
 
   def start
     flatten_directory
-    # set_destination_directory
-    # destroy_non_video_files!
-    # clean_mkv_files
-    # clean_mp4_files
-    # find_and_move_remaining_video_files
+    set_destination_directory
+    puts "\n\n\n *** destroying nonvideo files *** \n\n\n"
+    destroy_non_video_files!
+    puts "\n\n\n *** clean mkv files *** \n\n\n"
+    clean_mkv_files
+    puts "\n\n\n *** clean mp4 files *** \n\n\n"
+    clean_mp4_files
+    puts "\n\n\n *** find and remove remaining video files *** \n\n\n"
+    find_and_move_remaining_video_files
   end
 
-   # Flatten directory so everything is out of folder structure
-   def flatten_directory
+  # Flatten directory so everything is out of folder structure
+  def flatten_directory
     system("find /home/chris/Downloads -mindepth 2 -type f -exec mv -i '{}' /home/chris/Downloads ';'")
-    #system("mv #{current_dir}/*/**/*(.D) #{current_dir}")
   end
 
   def set_destination_directory
@@ -28,10 +31,10 @@ class MetadataCleaner
     loop do
       dir = gets.chomp
       if dir == "movies"
-        @directory = "~/Desktop/movies"
+        @directory = "movies"
         break
       elsif dir == "tv_shows"
-        @directory = "~/Desktop/tv_shows"
+        @directory = "tv_shows"
         break
       else
         puts "=> Please select either 'movies' or 'tv_shows'."
@@ -77,14 +80,18 @@ class MetadataCleaner
 
   # Creates new metadataless copy of file in a different directory
   def create_clean_file(file)
-    destination = "#{@directory}/'clean_#{file}'"
-    system("ffmpeg -i '#{file}' -map_metadata -1 -c:v copy -c:a copy #{destination}")
+    new_name = clean_file_name(file)
+    system("ffmpeg -i '#{file}' -map_metadata -1 -c:v copy -c:a copy /home/chris/Desktop/#{@directory}/'#{new_name}'")
   end
 
   # Creates .mp4 version of filename
   def clean_mp4_name(file)
     regex = /(.mkv)$/
     file.gsub(regex, '') + '.mp4'
+  end
+
+  def clean_file_name(file)
+    file.gsub(/(\/home\/chris\/Downloads\/)/, 'clean_')
   end
 
   def is_video_file?(file)
@@ -118,7 +125,7 @@ class MetadataCleaner
 
   def move_files_to_destination(files_array)
     files_array.each do |file|
-      destination = "#{@directory}/'dirty_#{file}'"
+      destination = "/home/chris/Desktop/#{@directory}/'dirty_#{file}'"
       system("mv #{file} #{destination}")
       destroy_dirty_file!(file)
     end
@@ -130,25 +137,30 @@ class MetadataCleaner
     file.match?(regex)
   end
 
-  def destroy_empty_directory(directory)
-    if Dir.empty?(directory)
-      FileUtils.remove_dir(directory)
-    end
+  # Removes a directory!
+  def destroy_directory!(directory)
+    FileUtils.remove_dir(directory)
   end  
 
   def destroy_dirty_file!(file)
     FileUtils.rm(file)
   end
 
+  # Get rid of all the junk files
+  # Remove any sample files- may be problematic if a movie
+  # name contains word 'sample'
   def destroy_non_video_files!
     files = get_files("*")
+    
     files.each do |file|
       if is_sample_file(file)
         destroy_dirty_file!(file)
       elsif is_video_file?(file)
         next  
       elsif File.directory?(file)
-        destroy_empty_directory(file)
+        destroy_directory!(file)
+      else
+        destroy_dirty_file!(file)
       end
     end
   end
