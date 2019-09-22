@@ -1,3 +1,5 @@
+#!/usr/bin/env ruby
+
 require 'pry'
 
 class MetadataCleaner
@@ -14,13 +16,9 @@ class MetadataCleaner
     find_and_move_remaining_video_files
   end
 
-  def get_files(filetype)
-    Dir.glob("#{filetype}")
-  end
-
-  # Flatten directory so everything is out of folder structure
-  def flatten_directory
-    current_dir = Dir.pwd
+   # Flatten directory so everything is out of folder structure
+   def flatten_directory
+    current_dir = "/Downloads"
     system("mv #{current_dir}/*/**/*(.D) #{current_dir}")
   end
 
@@ -51,10 +49,10 @@ class MetadataCleaner
   def clean_mkv_files
     mkv_files = get_files("*.mkv")
 
-    mkv_files.each do |mkv|
-      convert_mkv_to_mp4(mkv)
-      destroy_dirty_file!(mkv)
-    end
+    # mkv_files.each do |mkv|
+    #   convert_mkv_to_mp4(mkv)
+    #   destroy_dirty_file!(mkv)
+    # end
   end
 
   # Strips metadata, removes old file for every mp4 file
@@ -65,6 +63,10 @@ class MetadataCleaner
       create_clean_file(mp4)
       destroy_dirty_file!(mp4)
     end
+  end
+
+  def get_files(filetype)
+    Dir["/home/chris/Downloads/*#{filetype}"]
   end
 
   # Converts mkv to mp4 in place
