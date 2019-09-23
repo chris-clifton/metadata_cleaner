@@ -1,17 +1,26 @@
 #!/usr/bin/env ruby
+require_relative 'output_helper'
+require 'fileutils'
+require 'pry'
+
 class MetadataCleaner
+  require 'fileutils'
 
   def initialize
-    welcome_message
+    @output_helper = OutputHelper.new
+    @output_helper.clear
+    @output_helper.welcome_message
   end
 
   def start
     flatten_directory
-    set_destination_directory
+    initialize_directories
+    # set_destination_directory # delete this method
     destroy_non_video_files!
     clean_mkv_files
     clean_mp4_files
     find_and_move_remaining_video_files
+    run_antivirus_scan
   end
 
   # Flatten directory so everything is out of folder structure
@@ -19,28 +28,50 @@ class MetadataCleaner
     system("find /home/chris/Downloads -mindepth 2 -type f -exec mv -i '{}' /home/chris/Downloads ';'")
   end
 
-  def set_destination_directory
-    puts "=> Enter directory to move clean files to.  Options: 'movies' and 'tv_shows'"
-    dir = nil
-    loop do
-      dir = gets.chomp
-      if dir == "movies"
-        @directory = "movies"
-        break
-      elsif dir == "tv_shows"
-        @directory = "tv_shows"
-        break
-      else
-        puts "=> Please select either 'movies' or 'tv_shows'."
-      end
-    end
+  def initialize_directories
+    @source       = get_or_create_dir(:source,      "/home/chris/Downloads")
+    @destination  = get_or_create_dir(:destination, "/home/chris/Desktop/movies")
+    @infected     = get_or_create_dir(:infected,    "/home/chris/Desktop/virus")
   end
 
-  def welcome_message
-    puts "Welcome to Movie Metadata Cleaning Utility."
-    puts "=> Press any key to continue..."
-    gets.chomp
+  def get_or_create_dir(dir_type, default_dir)
+    puts "=> Create directory for #{dir_type} files:"
+    puts "=> To use the default directory (#{default_dir}), just press 'Enter'"
+    puts "=> To use a different directory, please enter full path, then press 'Enter'"
+    directory_path = gets.chomp
+    
+    if directory_path == ""
+      directory_path = default_dir
+    else
+      directory_path
+    end
+
+    # If the directory doesn't already exist, create it
+    unless File.exists?(directory_path)
+      FileUtils.mkdir_p(directory_path)
+      #system("mkdir -p #{directory_path}")
+    end
+
+    puts "=> Directory for #{dir_type} files: #{directory_path}"
+    directory_path
   end
+
+  # def set_destination_directory
+  #   puts "=> Enter directory to move clean files to.  Options: 'movies' and 'tv_shows'"
+  #   dir = nil
+  #   loop do
+  #     dir = gets.chomp
+  #     if dir == "movies"
+  #       @directory = "movies"
+  #       break
+  #     elsif dir == "tv_shows"
+  #       @directory = "tv_shows"
+  #       break
+  #     else
+  #       puts "=> Please select either 'movies' or 'tv_shows'"
+  #     end
+  #   end
+  # end
 
   # Converts all mkv files to mp4, destroys original
   def clean_mkv_files
@@ -63,7 +94,7 @@ class MetadataCleaner
   end
 
   def get_files(filetype)
-    Dir["/home/chris/Downloads/*#{filetype}"]
+    Dir["#{@source}/*#{filetype}"]
   end
 
   # Converts mkv to mp4 in place
@@ -74,8 +105,8 @@ class MetadataCleaner
 
   # Creates new metadataless copy of file in a different directory
   def create_clean_file(file)
-    new_name = clean_file_name(file)
-    system("ffmpeg -i '#{file}' -map_metadata -1 -c:v copy -c:a copy /home/chris/Desktop/#{@directory}/'#{new_name}'")
+    name = clean_file_name(file)
+    system("ffmpeg -i '#{file}' -map_metadata -1 -c:v copy -c:a copy #{@destination}/'#{name}'")
   end
 
   # Creates .mp4 version of filename
@@ -105,7 +136,7 @@ class MetadataCleaner
     if video_files.count > 0  
       puts "=> #{video_files.count} video files remaining:"
       puts "#{video_files}"
-      puts "=> Move files to #{@directory} as is? Enter 'yes' or 'no'."
+      puts "=> Move files to #{@destination} as is? Enter 'yes' or 'no'"
       move = gets.chomp
       if move == "yes"
         move_files_to_destination!(video_files)
@@ -117,13 +148,14 @@ class MetadataCleaner
     end
   end
 
+  # Tag files as "dirty" and move to destination
   def move_files_to_destination(files_array)
     files_array.each do |file|
-      destination = "/home/chris/Desktop/#{@directory}/'dirty_#{file}'"
+      destination = "#{@destinaton}/'dirty_#{file}'"
       system("mv #{file} #{destination}")
       destroy_dirty_file!(file)
     end
-    puts "=> Files copied to #{destination} and original files destroyed."
+    puts "=> #{files_array.count} files copied to #{destination} and original files destroyed"
   end
 
   def is_sample_file(file)
@@ -157,6 +189,12 @@ class MetadataCleaner
         destroy_dirty_file!(file)
       end
     end
+  end
+
+  # Prints list of infected files as well as moving them to separate directory
+  def run_antivirus_scan
+    @output_helper.run_antivirus
+    system("clamscan -i --move=#{@infected} #{@destination}")
   end
 end
 
