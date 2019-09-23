@@ -97,8 +97,10 @@ class MetadataCleaner
     file.gsub(regex, '') + '.mp4'
   end
 
+  # TODO: Probably need to just tack the forward slash onto @source
   def clean_file_name(file)
-    file.gsub(/(\/home\/chris\/Downloads\/)/, 'clean_')
+    path = @source + "/"
+    file.gsub(path, 'clean_')
   end
 
   # May need to expand on whats considered a video file since
