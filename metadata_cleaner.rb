@@ -1,7 +1,6 @@
 #!/usr/bin/env ruby
 require_relative 'output_helper'
 require 'fileutils'
-require 'pry'
 
 class MetadataCleaner
   require 'fileutils'
@@ -13,9 +12,7 @@ class MetadataCleaner
   end
 
   def start
-    flatten_directory
     initialize_directories
-    # set_destination_directory # delete this method
     destroy_non_video_files!
     clean_mkv_files
     clean_mp4_files
@@ -23,15 +20,16 @@ class MetadataCleaner
     run_antivirus_scan
   end
 
-  # Flatten directory so everything is out of folder structure
-  def flatten_directory
-    system("find /home/chris/Downloads -mindepth 2 -type f -exec mv -i '{}' /home/chris/Downloads ';'")
-  end
-
   def initialize_directories
     @source       = get_or_create_dir(:source,      "/home/chris/Downloads")
     @destination  = get_or_create_dir(:destination, "/home/chris/Desktop/movies")
     @infected     = get_or_create_dir(:infected,    "/home/chris/Desktop/virus")
+    flatten_source_directory
+  end
+
+  # Flatten directory so all files are in parent/source folder
+  def flatten_source_directory
+    system("find #{@source} -mindepth 2 -type f -exec mv -i '{}' #{@source} ';'")
   end
 
   def get_or_create_dir(dir_type, default_dir)
@@ -55,23 +53,6 @@ class MetadataCleaner
     puts "=> Directory for #{dir_type} files: #{directory_path}"
     directory_path
   end
-
-  # def set_destination_directory
-  #   puts "=> Enter directory to move clean files to.  Options: 'movies' and 'tv_shows'"
-  #   dir = nil
-  #   loop do
-  #     dir = gets.chomp
-  #     if dir == "movies"
-  #       @directory = "movies"
-  #       break
-  #     elsif dir == "tv_shows"
-  #       @directory = "tv_shows"
-  #       break
-  #     else
-  #       puts "=> Please select either 'movies' or 'tv_shows'"
-  #     end
-  #   end
-  # end
 
   # Converts all mkv files to mp4, destroys original
   def clean_mkv_files
@@ -119,6 +100,8 @@ class MetadataCleaner
     file.gsub(/(\/home\/chris\/Downloads\/)/, 'clean_')
   end
 
+  # May need to expand on whats considered a video file since
+  # any filetype not in the regex gets destroyed
   def is_video_file?(file)
     regex = /(.mkv|.mp4|.avi)$/i
     file.match?(regex)
@@ -141,14 +124,15 @@ class MetadataCleaner
       if move == "yes"
         move_files_to_destination!(video_files)
       else
-        puts "=> Nothing changed."
+        puts "=> Files left in #{@source}."
       end
     else
       puts "=> No remaining video files."
     end
   end
 
-  # Tag files as "dirty" and move to destination
+  # Tag files as "dirty" but move them to destination anyway
+  # Should mostly be .avi files
   def move_files_to_destination(files_array)
     files_array.each do |file|
       destination = "#{@destinaton}/'dirty_#{file}'"
@@ -164,10 +148,12 @@ class MetadataCleaner
   end
 
   # Removes a directory!
+  # TODO: move to Trash instead
   def destroy_directory!(directory)
     FileUtils.remove_dir(directory)
   end  
 
+  # TODO: move to Trash instead
   def destroy_dirty_file!(file)
     FileUtils.rm(file)
   end

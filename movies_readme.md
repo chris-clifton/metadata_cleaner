@@ -9,6 +9,8 @@
 - Restructure as command line utility to take options and arguments
   - Really shouldn't destroy so many files, should make that an argument
 - Ability to clean files in place (in plex directory)
+  - Should not be able to destroy any files
+  - Should work one file at a time (create clean/delete dirty) to stay safe on storage
 - Add ability to clean .avi
 - Improve output for move_files_to_destination so its easier to read 
 - Add antivirus scanning to all files 
