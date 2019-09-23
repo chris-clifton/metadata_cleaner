@@ -47,7 +47,6 @@ class MetadataCleaner
     # If the directory doesn't already exist, create it
     unless File.exists?(directory_path)
       FileUtils.mkdir_p(directory_path)
-      #system("mkdir -p #{directory_path}")
     end
 
     puts "=> Directory for #{dir_type} files: #{directory_path}"
@@ -85,6 +84,8 @@ class MetadataCleaner
   end
 
   # Creates new metadataless copy of file in a different directory
+  # System command: ses ffmpeg tool to create a copy of the file 
+  # with most unnecessary metadata wiped from file
   def create_clean_file(file)
     name = clean_file_name(file)
     system("ffmpeg -i '#{file}' -map_metadata -1 -c:v copy -c:a copy #{@destination}/'#{name}'")
