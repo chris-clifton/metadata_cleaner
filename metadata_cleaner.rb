@@ -94,7 +94,7 @@ class MetadataCleaner
   # Creates .mp4 version of filename
   def clean_mp4_name(file)
     regex = /(.mkv)$/
-    file.gsub(regex, '') + '.mp4'
+    'converted_' + file.gsub(regex, '') + '.mp4'
   end
 
   # TODO: Probably need to just tack the forward slash onto @source
@@ -121,7 +121,11 @@ class MetadataCleaner
 
     if video_files.count > 0  
       puts "=> #{video_files.count} video files remaining:"
-      puts "#{video_files}"
+      
+      video_files.each do |file|
+        puts "=> #{file}"
+      end
+
       puts "=> Move files to #{@destination} as is? Enter 'yes' or 'no'"
       move = gets.chomp
       if move == "yes"
@@ -186,6 +190,3 @@ class MetadataCleaner
     system("clamscan -i --move=#{@infected} #{@destination}")
   end
 end
-
-job = MetadataCleaner.new
-job.start

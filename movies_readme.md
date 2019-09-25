@@ -1,3 +1,10 @@
+# How to Use
+
+
+# Dependencies
+- clamAV
+
+
 # movies.rb readme
 - exiftool <filename>
   - Check that the metadata has been correctly cleaned
@@ -13,11 +20,9 @@
   - Should work one file at a time (create clean/delete dirty) to stay safe on storage
 - Add ability to clean .avi
 - Improve output for move_files_to_destination so its easier to read 
-- Add antivirus scanning to all files 
-  - Scan the destination directory so all fluff is already deleted
-  - Add ability to create a directory for infected files to go, remove when done
 - Better display
   - Show all directories and their files
   - Show current files being manipulated
 - Validate all manipulations
   - Success/failure
+- A way to exit program gracefully
