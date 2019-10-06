@@ -4,7 +4,6 @@
 # Dependencies
 - clamAV
 
-
 # movies.rb readme
 - exiftool <filename>
   - Check that the metadata has been correctly cleaned
