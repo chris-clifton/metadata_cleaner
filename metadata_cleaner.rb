@@ -21,9 +21,9 @@ class MetadataCleaner
   end
 
   def initialize_directories
-    @source       = get_or_create_dir(:source,      "/home/chris/Downloads")
-    @destination  = get_or_create_dir(:destination, "/home/chris/Desktop/movies")
-    @infected     = get_or_create_dir(:infected,    "/home/chris/Desktop/virus")
+    @source       = get_or_create_dir(:source,      "/home/chris/Documents/deluge/downloads")
+    @destination  = get_or_create_dir(:destination, "/home/chris/Documents/deluge/movies")
+    @infected     = get_or_create_dir(:infected,    "/home/chris/Documents/deluge/virus")
     flatten_source_directory
   end
 
@@ -49,7 +49,7 @@ class MetadataCleaner
       FileUtils.mkdir_p(directory_path)
     end
 
-    puts "=> Directory for #{dir_type} files: #{directory_path}"
+    puts "=> Directory for #{dir_type} files: #{directory_path}\n\n"
     directory_path
   end
 
@@ -140,13 +140,13 @@ class MetadataCleaner
 
   # Tag files as "dirty" but move them to destination anyway
   # Should mostly be .avi files
-  def move_files_to_destination(files_array)
+  def move_files_to_destination!(files_array)
     files_array.each do |file|
-      destination = "#{@destinaton}/'dirty_#{file}'"
-      system("mv #{file} #{destination}")
+      new_destination = "#{@destinaton}/'dirty_#{file}'"
+      system("mv #{file} #{new_destination}")
       destroy_dirty_file!(file)
     end
-    puts "=> #{files_array.count} files copied to #{destination} and original files destroyed"
+    puts "=> #{files_array.count} files copied to #{@destination} and original files destroyed"
   end
 
   def is_sample_file(file)
@@ -154,15 +154,14 @@ class MetadataCleaner
     file.match?(regex)
   end
 
-  # Removes a directory!
-  # TODO: move to Trash instead
+  # Don't actually destroy them, just move them to the trash
   def destroy_directory!(directory)
-    FileUtils.remove_dir(directory)
+    system("trash #{directory}")
   end  
 
-  # TODO: move to Trash instead
+  # Don't actually destroy them, just move them to the trash
   def destroy_dirty_file!(file)
-    FileUtils.rm(file)
+    system("trashtrash #{file}")
   end
 
   # Get rid of all the junk files
@@ -188,5 +187,9 @@ class MetadataCleaner
   def run_antivirus_scan
     @output_helper.run_antivirus
     system("clamscan -i --move=#{@infected} #{@destination}")
+    system("clamscan -i --move=#{@infected} #{@source}")
   end
 end
+
+cleaner = MetadataCleaner.new
+cleaner.start

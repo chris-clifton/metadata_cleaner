@@ -1,5 +1,3 @@
-require 'pry'
-
 class OutputHelper
 
   def test_message
